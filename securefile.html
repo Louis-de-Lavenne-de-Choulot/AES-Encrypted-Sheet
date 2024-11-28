@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <style>
+        /* General Reset and Base Styling */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            color: #333;
+            background-color: #f4f4f9;
+            line-height: 1.6;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        /* Navigation Bar */
+        .nav {
+            background: #4CAF50;
+            color: #fff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav button {
+            background: #fff;
+            color: #4CAF50;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            margin-right: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .nav button:hover {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        /* Views */
+        #homeView,
+        #editorView {
+            display: none;
+        }
+
+        .active {
+            display: block !important;
+        }
+
+        /* Home View */
+        #homeView h2 {
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #4CAF50;
+        }
+
+        #homeView label {
+            font-weight: bold;
+        }
+
+        #homeView input {
+            padding: 10px;
+            width: 100%;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        #homeView button {
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            margin-right: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        #homeView button:hover {
+            background: #45a049;
+        }
+
+        /* Editor View */
+        .editor-toolbar {
+            background: #f4f4f9;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .editor-toolbar button {
+            background: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .editor-toolbar button:hover {
+            background: #0056b3;
+        }
+
+        .sheet-tabs {
+            display: flex;
+            gap: 5px;
+            padding: 5px;
+            background: #f0f0f0;
+        }
+
+        .sheet-tab {
+            padding: 5px 15px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+        }
+
+        .sheet-tab.active {
+            background: #fff;
+            border-bottom: none;
+        }
+
+        .excel-grid {
+            display: grid;
+            grid-template-columns: 40px repeat(100, 100px);
+            grid-template-rows: 30px repeat(1000, 30px);
+        }
+
+        .cell {
+            border: 1px solid #ccc;
+            padding: 5px;
+            height: 30px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .cell.header {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .cell.row-header {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            position: sticky;
+            left: 0;
+            z-index: 2;
+        }
+
+        .cell.selected {
+            background-color: #cce5ff;
+            border: 2px solid #007bff;
+        }
+
+        .cell.hidden-content {
+            color: inherit;
+            /* Keep the default text color */
+            font-weight: bold;
+            /* Optional: Emphasize hidden content */
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <div class="nav">
+        <div>Secure File Editor</div>
+        <div>
+            <button onclick="showView('home')">Home</button>
+            <button onclick="showView('editor')">Editor</button>
+        </div>
+    </div>
+
+    <!-- Home View -->
+    <div id="homeView" class="container active">
+        <h2>Welcome to Secure File Editor</h2>
+        <div style="margin-bottom: 20px;">
+            <label for="masterPassword">Master Password:</label>
+            <input type="password" id="masterPassword" placeholder="Enter Master Password">
+        </div>
+        <div>
+            <button onclick="scanUSB()">Scan for SecureKeys</button>
+            <button onclick="createNewSecureFile()">Create New Secure File</button>
+            <button onclick="openSecureFile()">Open Secure File</button>
+        </div>
+    </div>
+
+    <!-- Editor View -->
+    <div id="editorView" class="container">
+        <div class="editor-toolbar">
+            <p>Sauvegarde Automatique Activé -</p>
+            <button onclick="toggleHiddenCell()">Toggle Hidden</button>
+            <button onclick="addNewSheet()">Add Sheet</button>
+            <button onclick="renameSheet()">Rename Sheet</button>
+            <separator></separator>
+            <button style="background-color: rgb(255, 36, 36);" onclick="removeSheet()">Remove Sheet</button>
+        </div>
+
+        <div class="sheet-tabs" id="sheetTabs">
+        </div>
+        <div class="excel-container" id="excelContainer">
+        </div>
+    </div>
+
+
+
+    <script>
+        let securityFolder;
+        let currentFile;
+        let currentKeyFile;
+        let currentKey;
+        let activeSheet = 0;
+        let sheets = [];
+
+        class Sheet {
+            constructor(name) {
+                this.name = name;
+                this.cells = new Map();
+                this.hiddenCells = new Set();
+            }
+
+            setCell(row, col, value) {
+                const key = `${row},${col}`;
+                this.cells.set(key, value);
+            }
+
+            removeCell(row, col) {
+                const key = `${row},${col}`;
+                this.cells.delete(key);
+                if (this.hiddenCells.has(key)) {
+                    this.hiddenCells.delete(key);
+                }
+            }
+
+            getCell(row, col) {
+                const key = `${row},${col}`;
+                return this.cells.get(key) || '';
+            }
+
+            toggleHidden(row, col) {
+                const key = `${row},${col}`;
+                if (this.hiddenCells.has(key)) {
+                    this.hiddenCells.delete(key);
+                } else {
+                    this.hiddenCells.add(key);
+                }
+            }
+
+            isHidden(row, col) {
+                return this.hiddenCells.has(`${row},${col}`);
+            }
+        }
+
+        function showView(view) {
+            document.getElementById('homeView').classList.remove('active');
+            document.getElementById('editorView').classList.remove('active');
+            document.getElementById(`${view}View`).classList.add('active');
+
+            if (view === 'editor' && sheets.length === 0) {
+                initializeEditor();
+            }
+        }
+
+        async function scanUSB() {
+            try {
+                const dirHandle = await window.showDirectoryPicker();
+                searchSecureKeys(dirHandle);
+            } catch (error) {
+                console.error('Error accessing USB:', error);
+                alert('Error accessing device');
+            }
+        }
+
+        async function searchSecureKeys(dirHandle) {
+            try {
+                for await (const entry of dirHandle.values()) {
+                    if (entry.kind === 'directory' && entry.name === 'securekeys') {
+                        // Found securekeys directory
+                        securityFolder = entry;
+                        return;
+                    }
+                }
+                alert('SecureKeys folder not found');
+            } catch (error) {
+                console.error('Error searching for securekeys:', error);
+                alert('Error searching device');
+            }
+        }
+
+        async function createNewSecureFile() {
+            try {
+                // Generate random key (32 bytes = 256 bits for AES-256)
+                const key = new Uint8Array(32);
+                crypto.getRandomValues(key);
+
+                // Convert to hex string for storage
+                const keyHex = Array.from(key)
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+
+                currentKey = keyHex;
+                sheets = [new Sheet('Sheet1')];
+                hiddenCells = new Set();
+                currentFile = undefined;
+                currentKeyFile = undefined;
+
+                activeSheet = 0;
+                saveFile();
+                showView('editor');
+                renderSheet();
+            } catch (error) {
+                console.error('Error creating secure file:', error);
+                alert('Error creating secure file');
+            }
+        }
+
+        async function openSecureFile() {
+            try {
+                // First, select the .securefile
+                const [fileHandle] = await window.showOpenFilePicker({
+                    types: [{
+                        description: 'Secure Files',
+                        accept: {
+                            'application/securefile': ['.securefile']
+                        }
+                    }]
+                });
+
+                let kfile;
+                let keyExists = false;
+                // search in securityFolder FileSystemDirectoryHandle AsyncIterator {}
+
+                if (securityFolder) {
+                    // Using for await...of to iterate through entries
+                    for await (const [name, handle] of securityFolder.entries()) {
+
+                        if (name === fileHandle.name.replace('.securefile', '.securekey')) {
+                            keyExists = true;
+                            kfile = handle;
+                            break;
+                        }
+                    }
+                }
+
+                if (!keyExists) {
+                    // Then, select the corresponding .securekey file
+                    const [keyF] = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'Secure Key Files',
+                            accept: {
+                                'application/securekey': ['.securekey']
+                            }
+                        }]
+                    });
+                    kfile = keyF;
+                }
+
+                // Read the key file
+                const keyFile = await kfile.getFile();
+                const keyContent = await keyFile.text();
+                // Read the key file
+                const encryptedFile = await fileHandle.getFile();
+                const encryptedContent = await encryptedFile.text();
+
+
+                currentKeyFile = kfile;
+                currentKey = keyContent;
+                currentFile = fileHandle;
+
+                if (document.getElementById("masterPassword").value != "") {
+                    
+                    let newk = Array.from(document.getElementById("masterPassword").value)
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('')
+                    currentKey = decryptContent(currentKey, newk);
+                }
+                const decryptedContent = decryptContent(encryptedContent, currentKey);
+
+                // Parse file content and create sheets
+                parseFileContent(decryptedContent);
+
+                showView('editor');
+                renderSheet();
+            } catch (error) {
+                alert('Error opening file');
+            }
+        }
+
+        async function saveFile() {
+            try {
+                let fileHandle;
+                if (!currentFile) {
+                    // Save the encrypted file
+                    fileHandle = await window.showSaveFilePicker({
+                        types: [{
+                            description: 'Secure Files',
+                            accept: {
+                                'application/securefile': ['.securefile']
+                            }
+                        }]
+                    });
+                    currentFile = fileHandle;
+                } else {
+                    fileHandle = currentFile;
+                }
+
+                // Get the base name without extension
+                const baseName = fileHandle.name.replace('.securefile', '');
+                let keyHandle;
+                if (!currentKeyFile) {
+                    // Save the key file
+                    keyHandle = await window.showSaveFilePicker({
+                        types: [{
+                            description: 'Secure Key Files',
+                            accept: {
+                                'application/securekey': ['.securekey']
+                            }
+                        }],
+                        suggestedName: `${baseName}.securekey`
+                    });
+                    currentKeyFile = keyHandle;
+                } else {
+                    keyHandle = currentKeyFile;
+                }
+
+
+                if (!currentKey) {
+                    // Generate new encryption key
+                    const key = new Uint8Array(32);
+                    crypto.getRandomValues(key);
+
+                    // Convert to hex string for storage
+                    currentKey = Array.from(key)
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('');
+                }
+                    // Write the key file
+                    const keyWritable = await keyHandle.createWritable();
+                if (document.getElementById("masterPassword").value != "") {
+
+                    let newk = Array.from(document.getElementById("masterPassword").value)
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('')
+                    await keyWritable.write(encryptContent(currentKey, newk));
+                } else {
+                    await keyWritable.write(currentKey);
+                }
+                await keyWritable.close();
+
+                // Prepare content
+                let content = '';
+                sheets.forEach(sheet => {
+                    content += `_filename_sheet_${sheet.name}\n`;
+                    sheet.cells.forEach((value, key) => {
+                        const [row, col] = key.split(',');
+                        if (value === '') {
+                            sheet.removeCell(row, col);
+                            return;
+                        }
+                        if (sheet.isHidden(row, col))
+                            content += `pwd(${value})!,!${col}!,!${row}\n`;
+                        else
+                            content += `${value}!,!${col}!,!${row}\n`;
+                    });
+                });
+
+                // Encrypt content
+                const encryptedContent = encryptContent(content, currentKey);
+
+
+
+                // Write the encrypted file
+                const fileWritable = await fileHandle.createWritable();
+                await fileWritable.write(encryptedContent);
+                await fileWritable.close();
+
+            } catch (error) {
+                console.error('Error saving file:', error);
+            }
+        }
+
+        // Encryption functions
+        function encryptContent(content, keyHex) {
+            try {
+                // Derive a key using SHA-512
+                const key = CryptoJS.SHA512(keyHex);
+
+                // Generate a random IV
+                const iv = CryptoJS.lib.WordArray.random(16);
+
+                // Encrypt the content
+                const encrypted = CryptoJS.AES.encrypt(content, key, {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+
+                // Combine IV and encrypted content
+                return iv.toString() + encrypted.toString();
+            } catch (error) {
+                console.error('Encryption error:', error);
+                throw new Error('Encryption failed');
+            }
+        }
+
+        function decryptContent(encryptedContent, keyHex) {
+            try {
+                // Derive the key using SHA-512
+                const key = CryptoJS.SHA512(keyHex);
+
+                // Extract IV and encrypted data
+                const iv = CryptoJS.enc.Hex.parse(encryptedContent.slice(0, 32));
+                const encrypted = encryptedContent.slice(32);
+
+                // Decrypt the content
+                const decrypted = CryptoJS.AES.decrypt(encrypted, key, {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+
+                return decrypted.toString(CryptoJS.enc.Utf8);
+            } catch (error) {
+                alert('Invalid password, verify if master password is correct');
+            }
+        }
+
+        // Add this utility function
+        async function findSecureKeyFile(dirHandle, fileName) {
+            try {
+                const entries = await dirHandle.values();
+                for await (const entry of entries) {
+                    if (entry.kind === 'file' && entry.name === fileName) {
+                        return entry;
+                    } else if (entry.kind === 'directory') {
+                        const result = await findSecureKeyFile(entry, fileName);
+                        if (result) return result;
+                    }
+                }
+            } catch (error) {
+                console.error('Error searching for key file:', error);
+            }
+            return null;
+        }
+
+        function parseFileContent(content) {
+            sheets = [];
+            const lines = content.split('\n');
+            let currentSheet = null;
+
+            for (const line of lines) {
+                if (line.startsWith('_filename_sheet_')) {
+                    const sheetName = line.split('_filename_sheet_')[1].trim();
+                    currentSheet = new Sheet(sheetName);
+                    sheets.push(currentSheet);
+                } else if (line.trim() && currentSheet) {
+                    const [value, col, row] = line.split('!,!');
+                    if (value.startsWith('pwd(') && value.endsWith(')')) {
+                        currentSheet.setCell(parseInt(row), parseInt(col), value.slice(4, -1));
+                        currentSheet.toggleHidden(parseInt(row), parseInt(col));
+                    } else {
+                        currentSheet.setCell(parseInt(row), parseInt(col), value);
+                    }
+                }
+            }
+
+            if (sheets.length === 0) {
+                sheets.push(new Sheet('Sheet1'));
+            }
+        }
+
+        function initializeEditor() {
+            sheets = [new Sheet('Sheet1')];
+            renderSheet();
+        }
+
+        function renderSheet() {
+            renderSheetTabs();
+            renderGrid();
+        }
+
+        function renderSheetTabs() {
+            const tabsContainer = document.getElementById('sheetTabs');
+            tabsContainer.innerHTML = '';
+
+            sheets.forEach((sheet, index) => {
+                const tab = document.createElement('div');
+                tab.className = `sheet-tab ${index === activeSheet ? 'active' : ''}`;
+                tab.textContent = sheet.name;
+                tab.onclick = () => switchSheet(index);
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+
+        let selectedCells = [];
+
+        function renderGrid() {
+            const container = document.getElementById('excelContainer');
+            container.innerHTML = '';
+
+            const grid = document.createElement('div');
+            grid.className = 'excel-grid';
+
+            // Add corner cell
+            const cornerCell = document.createElement('div');
+            cornerCell.className = 'cell header';
+            grid.appendChild(cornerCell);
+
+            // Add column headers
+            for (let col = 0; col < 100; col++) {
+                const header = document.createElement('div');
+                header.className = 'cell header';
+                header.textContent = String.fromCharCode(65 + (col % 26));
+                grid.appendChild(header);
+            }
+
+            // Add rows
+            for (let row = 0; row < 200; row++) {
+                // Add row header
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'cell row-header';
+                rowHeader.textContent = row + 1;
+                grid.appendChild(rowHeader);
+
+                // Add cells
+                for (let col = 0; col < 100; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.contentEditable = true;
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+
+                    const sheet = sheets[activeSheet];
+                    const isHidden = sheet.isHidden(row, col);
+                    const value = sheet.getCell(row, col);
+
+                    // Show masked or actual value
+                    cell.textContent = isHidden ? '***' : value;
+
+                    if (isHidden) {
+                        cell.classList.add('hidden-content');
+                    }
+
+                    // Attach selection events
+                    cell.addEventListener('mousedown', (event) => startSelection(event, cell));
+                    cell.addEventListener('mouseover', (event) => continueSelection(event, cell));
+                    cell.addEventListener('mouseup', endSelection);
+                    cell.addEventListener('keydown', (event) => handleCtrl(event));
+                    cell.addEventListener('keyup', (event) => handleCellInput(event));
+
+                    grid.appendChild(cell);
+                }
+            }
+
+            container.appendChild(grid);
+        }
+
+        let isSelecting = false;
+
+        function startSelection(event, cell) {
+
+            // Unselect all cells if the click is outside cells
+            selectedCells.forEach(cell => cell.classList.remove('selected'));
+            selectedCells = [];
+
+            isSelecting = true;
+
+            // Add the current cell to selection
+            addToSelection(cell);
+        }
+
+        function continueSelection(event, cell) {
+            if (!isSelecting) return;
+
+            addToSelection(cell);
+        }
+
+        function endSelection() {
+            isSelecting = false;
+        }
+
+        function addToSelection(cell) {
+            if (!cell.classList.contains('selected')) {
+                cell.classList.add('selected');
+                selectedCells.push(cell);
+            }
+        }
+
+
+
+        function switchSheet(index) {
+            activeSheet = index;
+            renderSheet();
+        }
+
+        let isCtrlPressed = false;
+        function handleCtrl(event) {
+            if (event.key === "Control") {
+                isCtrlPressed = true;
+            }
+        }
+
+        function handleCellInput(event) {
+
+            //return if ctrl key or shift key is pressed
+            if (event.key === "Control") {
+                isCtrlPressed = false;
+                return;
+            }
+            if (isCtrlPressed && (event.key === 'c' || event.key === 'C') || event.key === "CapsLock" || event.shiftKey) return;
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            if (cell.textContent === '')
+                sheets[activeSheet].removeCell(row, col);
+            else {
+                if (sheets[activeSheet].isHidden(row, col)) {
+                    alert("This cell is hidden, Toggle the visibility to edit");
+                    cell.textContent = "***";
+                    return;
+                }
+                sheets[activeSheet].setCell(row, col, cell.textContent);
+            }
+            saveFile(); // Auto-save after editing a cell
+        }
+
+        function addNewSheet() {
+            const name = `Sheet${sheets.length + 1}`;
+            sheets.push(new Sheet(name));
+            activeSheet = sheets.length - 1;
+            renderSheet();
+            saveFile(); // Auto-save after adding a sheet
+        }
+
+        function renameSheet() {
+            const newName = prompt("Enter a new name for the sheet:");
+            if (newName && newName.trim()) {
+                sheets[activeSheet].name = newName.trim();
+                renderSheetTabs();
+                saveFile(); // Auto-save after renaming
+            }
+        }
+
+        function removeSheet() {
+            const yes = prompt("Are you sure, this is not reversible, type 'yes' to confirm");
+            if (yes.trim() === 'yes') {
+                sheets.splice(activeSheet, 1);
+                if (activeSheet >= sheets.length) {
+                    activeSheet = sheets.length - 1;
+                }
+                renderSheet();
+                renderSheetTabs();
+                saveFile(); // Auto-save after removing a sheet
+            }
+        }
+
+        function toggleHiddenCell() {
+            if (selectedCells.length === 0) return; // Nothing to toggle if no selection
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                // Toggle the hidden state
+                sheet.toggleHidden(row, col);
+
+                // Update the cell content
+                if (sheet.isHidden(row, col)) {
+                    sheets[activeSheet].setCell(row, col, cell.textContent); // Update the sheet
+                    cell.textContent = '***'; // Replace content with *
+                    cell.classList.add('hidden-content');
+                } else {
+                    cell.textContent = sheet.getCell(row, col); // Restore original content
+                    cell.classList.remove('hidden-content');
+                }
+                saveFile();
+            });
+
+            // Clear the selection after toggling
+            selectedCells.forEach(cell => cell.classList.remove('selected'));
+            selectedCells = [];
+        }
+
+
+        document.addEventListener('paste', (event) => {
+            handlePaste(event);
+        })
+
+        function handlePaste(event) {
+            event.preventDefault();
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            const text = event.clipboardData.getData('text');
+            const rows = text.split('\n');
+
+            rows.forEach((rowText, rowOffset) => {
+                const cells = rowText.split('\t');
+                cells.forEach((cellText, colOffset) => {
+                    const targetRow = row + rowOffset;
+                    const targetCol = col + colOffset;
+                    sheets[activeSheet].setCell(targetRow, targetCol, cellText);
+                });
+            });
+
+            renderSheet();
+        }
+
+        document.addEventListener('copy', (event) => {
+            if (selectedCells.length === 0) return;
+
+            let content = '';
+            const selectedData = {};
+
+            // Collect selected cells
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const value = sheets[activeSheet].getCell(row, col);
+
+                if (!selectedData[row]) selectedData[row] = {};
+
+                selectedData[row][col] = sheets[activeSheet].isHidden(row, col) ? value : cell.textContent;
+            });
+
+            // Format selected data into rows and columns
+            const rows = Object.keys(selectedData).sort((a, b) => a - b);
+            rows.forEach(row => {
+                const cols = Object.keys(selectedData[row]).sort((a, b) => a - b);
+                const rowData = cols.map(col => selectedData[row][col]);
+                content += rowData.join('\t') + '\n';
+            });
+
+            // Set copied content
+            event.clipboardData.setData('text/plain', content.trim());
+            event.preventDefault();
+        });
+
+
+
+        // Initialize with home view
+        showView('home');
+    </script>
+</body>
+
+</html>

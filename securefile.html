@@ -422,7 +422,7 @@
         .color-swatch {
             width: 20px;
             height: 20px;
-            border-radius: 2px;
+            border: none;
             cursor: pointer;
         }
     </style>
@@ -524,25 +524,31 @@
                         onclick="document.getElementById('fontSizeInput').value= parseFloat(document.getElementById('fontSizeInput').value == '' ? 14 : document.getElementById('fontSizeInput').value) + 1; setFontSize()">A+</button>
                     <button class="icon" title="" type="button"
                         onclick="document.getElementById('fontSizeInput').value= parseFloat(document.getElementById('fontSizeInput').value == '' ? 14 : document.getElementById('fontSizeInput').value) - 1; setFontSize()">A-</button>
-                    <button class="icon" title="" type="button" onclick="toggleUpper()">Aa</button>
+                    <button class="icon" title="Aa" type="button" onclick="toggleUpper()">Aa</button>
                 </div>
-                <div class="tool">
+                <div class="tool-group">
+                    <div class="group-title">Couleur Texte</div>
                     <div class="color-picker">
-                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#000000')"
-                            style="background-color: #000000;">
-                        </button>
-                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#FF0000')"
-                            style="background-color: #FF0000;">
-                        </button>
-                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#00FF00')"
-                            style="background-color: #00FF00;">
-                        </button>
-                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#0000FF')"
-                            style="background-color: #0000FF;">
-                        </button>
-                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#FFFF00')"
-                            style="background-color: #FFFF00;">
-                        </button>
+                        <button class="color-swatch" title="Black" type="button" onclick="setTextColor('#000000')"
+                            style="background-color: #000000;"></button>
+                        <button class="color-swatch" title="Red" type="button" onclick="setTextColor('#FF0000')"
+                            style="background-color: #FF0000;"></button>
+                        <button class="color-swatch" title="Green" type="button" onclick="setTextColor('#00FF00')"
+                            style="background-color: #00FF00;"></button>
+                        <button class="color-swatch" title="Blue" type="button" onclick="setTextColor('#0000FF')"
+                            style="background-color: #0000FF;"></button>
+                        <button class="color-swatch" title="Yellow" type="button" onclick="setTextColor('#FFFF00')"
+                            style="background-color: #FFFF00;"></button>
+                        <button class="color-swatch" title="Cyan" type="button" onclick="setTextColor('#00FFFF')"
+                            style="background-color: #00FFFF;"></button>
+                        <button class="color-swatch" title="Magenta" type="button" onclick="setTextColor('#ff61ff')"
+                            style="background-color: #ff61ff;"></button>
+                        <button class="color-swatch" title="Orange" type="button" onclick="setTextColor('#ffbb3c')"
+                            style="background-color: #ffbb3c;"></button>
+                        <button class="color-swatch" title="Purple" type="button" onclick="setTextColor('#e700e7')"
+                            style="background-color: #e700e7;"></button>
+                        <button class="color-swatch" title="Brown" type="button" onclick="setTextColor('#ff5050')"
+                            style="background-color: #ff5050;"></button>
                     </div>
                 </div>
             </div>
@@ -559,6 +565,32 @@
                     <!-- <button class="icon" title="" type="button" onclick="setVerticalAlign('top')">⬆</button>
                     <button class="icon" title="" type="button" onclick="setVerticalAlign('middle')">⬇</button>
                     <button class="icon" title="" type="button" onclick="setVerticalAlign('bottom')">⬍</button> -->
+                </div>
+                
+                <div class="tool-group">
+                    <div class="group-title">Arrière-Plan</div>
+                    <div class="color-picker">
+                        <button class="color-swatch" title="Black" type="button" onclick="setBackgroundColor('#000000')"
+                            style="background-color: #000000;"></button>
+                        <button class="color-swatch" title="Red" type="button" onclick="setBackgroundColor('#FF0000')"
+                            style="background-color: #FF0000;"></button>
+                        <button class="color-swatch" title="Green" type="button" onclick="setBackgroundColor('#00FF00')"
+                            style="background-color: #00FF00;"></button>
+                        <button class="color-swatch" title="Blue" type="button" onclick="setBackgroundColor('#0000FF')"
+                            style="background-color: #0000FF;"></button>
+                        <button class="color-swatch" title="Yellow" type="button" onclick="setBackgroundColor('#FFFF00')"
+                            style="background-color: #FFFF00;"></button>
+                        <button class="color-swatch" title="Cyan" type="button" onclick="setBackgroundColor('#00FFFF')"
+                            style="background-color: #00FFFF;"></button>
+                        <button class="color-swatch" title="Magenta" type="button" onclick="setBackgroundColor('#ff61ff')"
+                            style="background-color: #ff61ff;"></button>
+                        <button class="color-swatch" title="Orange" type="button" onclick="setBackgroundColor('#ffbb3c')"
+                            style="background-color: #ffbb3c;"></button>
+                        <button class="color-swatch" title="Purple" type="button" onclick="setBackgroundColor('#e700e7')"
+                            style="background-color: #e700e7;"></button>
+                        <button class="color-swatch" title="Brown" type="button" onclick="setBackgroundColor('#ff5050')"
+                            style="background-color: #ff5050;"></button>
+                    </div>
                 </div>
             </div>
 
@@ -774,22 +806,15 @@
             });
         }
 
-        function setBackgroundColor() {
+        function setBackgroundColor(color) {
             if (selectedCells.length === 0) return;
-
-            const color = prompt("Enter background color (e.g., 'yellow' or '#ffff00'):");
-            if (!color) return;
 
             selectedCells.forEach(cell => {
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
                 const sheet = sheets[activeSheet];
 
-                const key = `${row},${col}`;
-                const currentCellStyles = sheet.cellStyles.get(key) || {};
-                currentCellStyles.backgroundColor = color;
-                sheet.cellStyles.set(key, currentCellStyles);
-
+                sheet.setStyle(row, col, 'backgroundColor', color);
                 updateCellDisplay(row, col);
                 saveFile();
             });
@@ -915,6 +940,7 @@
                 cell.style.fontStyle = textStyles.italic ? "italic" : "normal";
                 cell.style.textDecoration = textStyles.underline ? "underline" : "none";
                 cell.style.color = textStyles.color || "inherit";
+                cell.style.backgroundColor = textStyles.backgroundColor || "inherit";
                 cell.style.fontSize = textStyles.fontSize + "px" || "inherit";
                 cell.style.width = textStyles.width + "px" || "inherit";
                 cell.style.fontFamily = textStyles.fontFamily || "Arial";
@@ -1489,7 +1515,7 @@
             isSelecting = true;
             selectionStart = cell;
 
-            document.getElementById("fontSizeInput").value = cell.style.fontSize;
+            document.getElementById("fontSizeInput").value = cell.style.fontSize.split("px")[0];
             addToSelection(cell);
         }
 

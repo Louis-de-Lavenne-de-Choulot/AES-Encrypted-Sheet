@@ -556,9 +556,9 @@
                     <button class="icon" title="" type="button" onclick="setTextAlign('right')">⇒</button>
                 </div>
                 <div class="tool">
-                    <button class="icon" title="" type="button" onclick="setVerticalAlign('top')">⬆</button>
+                    <!-- <button class="icon" title="" type="button" onclick="setVerticalAlign('top')">⬆</button>
                     <button class="icon" title="" type="button" onclick="setVerticalAlign('middle')">⬇</button>
-                    <button class="icon" title="" type="button" onclick="setVerticalAlign('bottom')">⬍</button>
+                    <button class="icon" title="" type="button" onclick="setVerticalAlign('bottom')">⬍</button> -->
                 </div>
             </div>
 
@@ -711,6 +711,7 @@
 
                 sheet.toggleStyle(row, col, 'bold');
                 updateCellDisplay(row, col);
+                saveFile();
             });
 
         }
@@ -725,6 +726,7 @@
 
                 sheet.toggleStyle(row, col, 'italic');
                 updateCellDisplay(row, col);
+                saveFile();
             });
         }
 
@@ -754,6 +756,7 @@
 
                 sheet.toggleStyle(row, col, 'underline');
                 updateCellDisplay(row, col);
+                saveFile();
             });
         }
 
@@ -767,6 +770,7 @@
 
                 sheet.setStyle(row, col, 'color', color);
                 updateCellDisplay(row, col);
+                saveFile();
             });
         }
 
@@ -787,6 +791,7 @@
                 sheet.cellStyles.set(key, currentCellStyles);
 
                 updateCellDisplay(row, col);
+                saveFile();
             });
         }
 
@@ -800,6 +805,7 @@
 
                 sheet.setStyle(row, col, 'fontSize', size);
                 updateCellDisplay(row, col);
+                saveFile();
             });
         }
 
@@ -813,6 +819,7 @@
 
                 sheet.setStyle(row, col, 'textAlign', align);
                 updateCellDisplay(row, col);
+                saveFile();
             });
         }
 
@@ -828,6 +835,7 @@
 
                 sheet.setStyle(row, col, 'fontFamily', font);
                 updateCellDisplay(row, col);
+                saveFile();
             });
         }
 
@@ -842,9 +850,10 @@
 
                 // Update the cell's display
                 const value = sheet.getCell(row, col);
-                cell.textContent = formatNumber(value, format);
-                if (!sheets[activeSheet].isHidden(row, col))
+                if (!sheets[activeSheet].isHidden(row, col)) {
+                    cell.textContent = formatNumber(value, format);
                     sheets[activeSheet].setCell(row, col, formatNumber(value, format));
+                }
             });
         }
 
@@ -893,13 +902,15 @@
             });
         }
 
-        function updateCellDisplay(row, col) {
+        function updateCellDisplay(row, col, init = false) {
             const act = sheets[activeSheet];
+
             const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
             const { textStyles, cellStyles } = act.getStyles(row, col);
 
             // Text styles
-            if (textStyles) {
+            if (textStyles && !isEmpty(textStyles)) {
+
                 cell.style.fontWeight = textStyles.bold ? "bold" : "normal";
                 cell.style.fontStyle = textStyles.italic ? "italic" : "normal";
                 cell.style.textDecoration = textStyles.underline ? "underline" : "none";
@@ -911,21 +922,31 @@
             }
 
             // Cell styles
-            if (cellStyles) {
+            if (cellStyles && !isEmpty(cellStyles)) {
                 cell.style.backgroundColor = cellStyles.backgroundColor || "transparent";
             }
 
             // Hidden cells
-            if (act.hiddenCells.has(`${row},${col}`)) {
-                cell.textContent = '***';
-                cell.classList.add('hidden-content');
-            } else {
-                cell.textContent = act.getCell(row, col) || '';
-                cell.classList.remove('hidden-content');
+            if (!init) {
+                if (act.hiddenCells.has(`${row},${col}`)) {
+                    cell.textContent = '***';
+                    cell.classList.add('hidden-content');
+                } else {
+                    cell.textContent = act.getCell(row, col) || '';
+                    cell.classList.remove('hidden-content');
+                }
             }
-            saveFile();
         }
 
+        function isEmpty(obj) {
+            for (const prop in obj) {
+                if (Object.hasOwn(obj, prop)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
 
 
@@ -1184,10 +1205,31 @@
                     fileHandle = currentFile;
                 }
 
-                if (!currentKey) {
+                if (!currentKeyFile) {
                     const key = new Uint8Array(32);
                     crypto.getRandomValues(key);
                     currentKey = Array.from(key).map(b => b.toString(16).padStart(2, '0')).join('');
+
+                    let kf = await window.showSaveFilePicker({
+                        types: [{
+                            description: 'Secure Files',
+                            accept: { 'application/securefile': ['.securekey'] }
+                        }]
+                    });
+                    currentKeyFile = kf;
+                    let encryptedKey = currentKey;
+
+                    if (document.getElementById("masterPassword").value != "") {
+
+                        let newk = Array.from(document.getElementById("masterPassword").value)
+                            .map(b => b.toString(16).padStart(2, '0'))
+                            .join('')
+                        encryptedKey = encryptContent(encryptedKey, newk);
+                    }
+
+                    const fkw = await currentKeyFile.createWritable();
+                    await fkw.write(encryptedKey);
+                    await fkw.close();
                 }
 
                 let content = '';
@@ -1201,7 +1243,12 @@
                         }
 
                         let cellContent = value;
+                        if (sheet.isHidden(row, col)) {
+                            value = `pwd(${cellContent})`;
+                        }
+
                         if (sheet.isRichText(row, col) || sheet.cellStyles.get(key)) {
+
                             const styles = {
                                 text: value,
                                 textStyles: sheet.getRichTextStyles(row, col),
@@ -1213,11 +1260,6 @@
                         }
 
 
-                        if (sheet.isHidden(row, col)) {
-                            content += `pwd(${cellContent})!,!${col}!,!${row}\n`;
-                        } else {
-                            content += `${cellContent}!,!${col}!,!${row}\n`;
-                        }
                     });
                 });
 
@@ -1300,7 +1342,6 @@
             sheets = [];
             const lines = content.split('\n');
             let currentSheet = null;
-
             for (const line of lines) {
                 if (line.startsWith('_filename_sheet_')) {
                     const sheetName = line.split('_filename_sheet_')[1].trim();
@@ -1314,15 +1355,16 @@
                     if (value.startsWith('{') && value.endsWith('}')) {
                         try {
                             const parsedStyles = JSON.parse(value);
-                            currentSheet.setCell(parseInt(row), parseInt(col), parsedStyles.text, parsedStyles.textStyles, parsedStyles.cellStyles);
+                            let text = parsedStyles.text;
+                            if (text.startsWith('pwd(') && value.endsWith(')')) {
+                                text = text.slice(4, -1);
+                                currentSheet.toggleHidden(parseInt(row), parseInt(col));
+                            }
+
+                            currentSheet.setCell(parseInt(row), parseInt(col), text, parsedStyles.textStyles, parsedStyles.cellStyles);
                         } catch (e) {
                             console.error("Failed to parse cell styles:", e);
                         }
-                    }
-
-
-                    if (typeof cellContent === "object" && cellContent.text) {
-                        currentSheet.setCell(parseInt(row), parseInt(col), cellContent.text, cellContent);
                     } else if (value.startsWith('pwd(') && value.endsWith(')')) {
                         currentSheet.setCell(parseInt(row), parseInt(col), value.slice(4, -1));
                         currentSheet.toggleHidden(parseInt(row), parseInt(col));
@@ -1384,6 +1426,9 @@
                 grid.appendChild(header);
             }
 
+
+            const sheet = sheets[activeSheet];
+
             // Add rows
             for (let row = 0; row < rowSize; row++) {
                 // Add row header
@@ -1400,7 +1445,6 @@
                     cell.dataset.row = row;
                     cell.dataset.col = col;
 
-                    const sheet = sheets[activeSheet];
                     const isHidden = sheet.isHidden(row, col);
                     const value = sheet.getCell(row, col);
 
@@ -1423,69 +1467,75 @@
             }
 
             container.appendChild(grid);
+            sheet.richTextStyles.forEach((element, key) => {
+                //get element row and col
+                arr = key.split(",");
+                let row = parseInt(arr[0]);
+                let col = parseInt(arr[1]);
+                //update display
+                updateCellDisplay(row, col, true);
+            });
         }
 
 
 
         let isSelecting = false;
-let selectionStart = null;
+        let selectionStart = null;
 
-function startSelection(event, cell) {
-    selectedCells.forEach(cell => cell.classList.remove('selected'));
-    selectedCells = [];
-    
-    isSelecting = true;
-    selectionStart = cell;
-    
-    document.getElementById("fontSizeInput").value = cell.style.fontSize;
-    addToSelection(cell);
-}
+        function startSelection(event, cell) {
+            selectedCells.forEach(cell => cell.classList.remove('selected'));
+            selectedCells = [];
 
-function continueSelection(event, cell) {
-    if (!isSelecting) return;
-    
-    // Clear previous selection
-    selectedCells.forEach(cell => cell.classList.remove('selected'));
-    selectedCells = [];
-    
-    // Get start and end coordinates
-    const startRow = parseInt(selectionStart.dataset.row);
-    const startCol = parseInt(selectionStart.dataset.col);
-    const endRow = parseInt(cell.dataset.row);
-    const endCol = parseInt(cell.dataset.col);
-    
-    // Calculate selection rectangle
-    const minRow = Math.min(startRow, endRow);
-    const maxRow = Math.max(startRow, endRow);
-    const minCol = Math.min(startCol, endCol);
-    const maxCol = Math.max(startCol, endCol);
-    
-    // Select all cells in the rectangle
-    for (let row = minRow; row <= maxRow; row++) {
-        for (let col = minCol; col <= maxCol; col++) {
-            const currentCell = document.querySelector(
-                `.cell[data-row="${row}"][data-col="${col}"]`
-            );
-            if (currentCell) {
-                addToSelection(currentCell);
+            isSelecting = true;
+            selectionStart = cell;
+
+            document.getElementById("fontSizeInput").value = cell.style.fontSize;
+            addToSelection(cell);
+        }
+
+        function continueSelection(event, cell) {
+            if (!isSelecting) return;
+
+            // Clear previous selection
+            selectedCells.forEach(cell => cell.classList.remove('selected'));
+            selectedCells = [];
+
+            // Get start and end coordinates
+            const startRow = parseInt(selectionStart.dataset.row);
+            const startCol = parseInt(selectionStart.dataset.col);
+            const endRow = parseInt(cell.dataset.row);
+            const endCol = parseInt(cell.dataset.col);
+
+            // Calculate selection rectangle
+            const minRow = Math.min(startRow, endRow);
+            const maxRow = Math.max(startRow, endRow);
+            const minCol = Math.min(startCol, endCol);
+            const maxCol = Math.max(startCol, endCol);
+
+            // Select all cells in the rectangle
+            for (let row = minRow; row <= maxRow; row++) {
+                for (let col = minCol; col <= maxCol; col++) {
+                    const currentCell = document.querySelector(
+                        `.cell[data-row="${row}"][data-col="${col}"]`
+                    );
+                    if (currentCell) {
+                        addToSelection(currentCell);
+                    }
+                }
             }
         }
-    }
-}
 
-function endSelection() {
-    isSelecting = false;
-    selectionStart = null;
-}
+        function endSelection() {
+            isSelecting = false;
+            selectionStart = null;
+        }
 
-function addToSelection(cell) {
-    if (!cell.classList.contains('selected')) {
-        cell.classList.add('selected');
-        selectedCells.push(cell);
-    }
-}
-
-
+        function addToSelection(cell) {
+            if (!cell.classList.contains('selected')) {
+                cell.classList.add('selected');
+                selectedCells.push(cell);
+            }
+        }
 
         function switchSheet(index) {
             activeSheet = index;

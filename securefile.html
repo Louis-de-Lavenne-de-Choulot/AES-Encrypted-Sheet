@@ -99,15 +99,16 @@
 
         /* Editor View */
         .editor-toolbar {
-            background: #f4f4f9;
-            padding: 10px;
             display: flex;
             gap: 10px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ddd;
         }
 
-        .editor-toolbar button {
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-btn {
             background: #007BFF;
             color: #fff;
             border: none;
@@ -117,9 +118,43 @@
             transition: background 0.3s ease;
         }
 
-        .editor-toolbar button:hover {
+        .dropdown-btn:hover {
             background: #0056b3;
         }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 150px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 5px;
+        }
+
+        .dropdown-content button {
+            color: #333;
+            padding: 10px 15px;
+            text-align: left;
+            text-decoration: none;
+            display: block;
+            border: none;
+            background: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .dropdown-content button:hover {
+            background-color: #f1f1f1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+
+
+        /* EDITOR MAIN STYLE */
 
         .sheet-tabs {
             display: flex;
@@ -165,7 +200,6 @@
             text-align: center;
             position: sticky;
             left: 0;
-            z-index: 2;
         }
 
         .cell.selected {
@@ -180,6 +214,240 @@
             /* Optional: Emphasize hidden content */
         }
     </style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <style>
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .menu-bar {
+            display: flex;
+            align-items: center;
+            background-color: #f3f4f6;
+            border-bottom: 1px solid #d1d5db;
+            padding: 0 10px;
+            overflow-x: auto;
+        }
+
+        .menu-bar .tab {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            padding: 10px 15px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.3s;
+        }
+
+        .menu-bar .tab:hover {
+            background-color: #e5e7eb;
+            border-radius: 4px;
+        }
+
+        .menu-bar .tab.active {
+            background-color: #e5e7eb;
+            border-radius: 4px;
+        }
+
+        .tool-panel {
+            display: flex;
+            padding: 6px;
+            background-color: white;
+            border-bottom: 1px solid #d1d5db;
+            overflow-x: auto;
+        }
+
+        .tool-group {
+            border-right: 1px solid #d1d5db;
+            padding-right: 20px;
+            margin-right: 20px;
+            min-width: fit-content;
+        }
+
+        .tool-group:last-child {
+            border-right: none;
+            margin-right: 0;
+        }
+
+        .tool {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 10px;
+            gap: 5px;
+        }
+
+        .tool .icon {
+            width: 20px;
+            height: 20px;
+            border: none;
+            margin-right: 5px;
+            background-color: #e5e7eb;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .tool .icon:hover {
+            background-color: #d1d5db;
+        }
+
+        .tool .label {
+            color: #374151;
+            cursor: pointer;
+        }
+
+        .tool input[type="text"],
+        .tool select {
+            font-size: 12px;
+            padding: 5px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            min-width: 100px;
+        }
+
+        .tool input[type="number"] {
+            width: 60px;
+            font-size: 12px;
+            padding: 5px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+
+        .tool .button {
+            background-color: #e5e7eb;
+            border: 1px solid #d1d5db;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .tool .button:hover {
+            background-color: #d1d5db;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .group-title {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .separator {
+            height: 1px;
+            background-color: #d1d5db;
+            margin: 5px 0;
+        }
+
+        .submenu-indicator {
+            margin-left: auto;
+            font-size: 10px;
+        }
+
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(5, 20px);
+            gap: 2px;
+        }
+
+        .color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+    </style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </head>
 
 <body>
@@ -208,14 +476,231 @@
 
     <!-- Editor View -->
     <div id="editorView" class="container">
-        <div class="editor-toolbar">
-            <p>Sauvegarde Automatique Activé -</p>
-            <button onclick="toggleHiddenCell()">Toggle Hidden</button>
-            <button onclick="addNewSheet()">Add Sheet</button>
-            <button onclick="renameSheet()">Rename Sheet</button>
-            <separator></separator>
-            <button style="background-color: rgb(255, 36, 36);" onclick="removeSheet()">Remove Sheet</button>
+
+        <!-- Menu Bar -->
+        <div class="menu-bar">
+            <!-- <div class="tab">Fichier</div> -->
+            <div class="tab active">Accueil</div>
+            <!-- <div class="tab">Insertion</div>
+            <div class="tab">Dessin</div>
+            <div class="tab">Mise en page</div>
+            <div class="tab">Formules</div>
+            <div class="tab">Données</div>
+            <div class="tab">Révision</div>
+            <div class="tab">Affichage</div> -->
         </div>
+
+        <!-- Tool Panel -->
+        <div class="tool-panel">
+            <!-- Group 1: Presse-papiers -->
+            <div class="tool-group">
+                <div class="group-title">Presse-papiers</div>
+                <div class="tool dropdown">
+                    <button class="icon" title="" type="button">📋</button>
+                    <div class="label">Coller</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Coller</div>
+                        <div class="dropdown-item">Coller les valeurs</div>
+                        <div class="dropdown-item">Coller les formules</div>
+                        <div class="dropdown-item">Coller en tant qu'image</div>
+                        <div class="dropdown-item">Collage spécial...</div>
+                    </div>
+                </div>
+                <div class="tool">
+                    <button class="icon" title="" type="button">✂</button>
+                    <div class="label">Couper</div>
+                </div>
+                <div class="tool">
+                    <button class="icon" title="" type="button">📄</button>
+                    <div class="label">Copier</div>
+                </div>
+            </div>
+
+            <!-- Group 2: Police -->
+            <div class="tool-group">
+                <div class="group-title">Police</div>
+                <div class="tool">
+                    <select onchange="setFontFamily(this.value)">
+                        <option>Calibri</option>
+                        <option>Arial</option>
+                        <option>Times New Roman</option>
+                        <option>Helvetica</option>
+                        <option>Verdana</option>
+                    </select>
+                    <input id="fontSizeInput" type="number" value="11" oninput="setFontSize()">
+                </div>
+                <div class="tool">
+                    <button class="icon" title="" type="button" style="font-weight: bold;"
+                        onclick="toggleBold()">B</button>
+                    <button class="icon" title="" type="button" style="font-style: italic;"
+                        onclick="toggleItalic()">I</button>
+                    <button class="icon" title="" type="button" style="text-decoration: underline;"
+                        onclick="toggleUnderline()">S</button>
+                </div>
+                <div class="tool">
+                    <button class="icon" title="" type="button"
+                        onclick="document.getElementById('fontSizeInput').value= parseFloat(document.getElementById('fontSizeInput').value == '' ? 11 : document.getElementById('fontSizeInput').value) + 1; setFontSize()">A+</button>
+                    <button class="icon" title="" type="button"
+                        onclick="document.getElementById('fontSizeInput').value= parseFloat(document.getElementById('fontSizeInput').value == '' ? 11 : document.getElementById('fontSizeInput').value) - 1; setFontSize()">A-</button>
+                    <button class="icon" title="" type="button"
+                    onclick="toggleUpper()">Aa</button>
+                </div>
+                <div class="tool">
+                    <div class="color-picker">
+                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#000000')"
+                            style="background-color: #000000;">
+                        </button>
+                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#FF0000')"
+                            style="background-color: #FF0000;">
+                        </button>
+                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#00FF00')"
+                            style="background-color: #00FF00;">
+                        </button>
+                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#0000FF')"
+                            style="background-color: #0000FF;">
+                        </button>
+                        <button class="color-swatch" title="" type="button" onclick="setTextColor('#FFFF00')"
+                            style="background-color: #FFFF00;">
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group 3: Alignment -->
+            <div class="tool-group">
+                <div class="group-title">Alignement</div>
+                <div class="tool">
+                    <button class="icon" title="" type="button" onclick="setTextAlign('justify')">⇐</button>
+                    <button class="icon" title="" type="button" onclick="setTextAlign('center')">⇔</button>
+                    <button class="icon" title="" type="button" onclick="setTextAlign('right')">⇒</button>
+                </div>
+                <div class="tool">
+                    <button class="icon" title="" type="button" onclick="setVerticalAlign('top')">⬆</button>
+                    <button class="icon" title="" type="button" onclick="setVerticalAlign('middle')">⬇</button>
+                    <button class="icon" title="" type="button" onclick="setVerticalAlign('bottom')">⬍</button>
+                </div>
+            </div>
+
+            <!-- Group 4: Nombre -->
+            <div class="tool-group">
+                <div class="group-title">Nombre</div>
+                <div class="tool">
+                    <select onchange="setNumberFormat(this.value)">
+                        <option value="general">Standard</option>
+                        <option value="currency">Monétaire</option>
+                        <option value="percentage">Pourcentage</option>
+                        <option value="date">Date</option>
+                        <option value="time">Heure</option>
+                        <option value="number">Scientifique</option>
+                        <option value="none">Texte</option>
+                    </select>
+                </div>
+            </div>
+ 
+            <!-- Group 5: Cellules -->
+            <!-- <div class="tool-group">
+                <div class="group-title">Cellules</div>
+                <div class="tool dropdown">
+                    <div class="label">Insérer</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Insérer des cellules</div>
+                        <div class="dropdown-item">Insérer des lignes</div>
+                        <div class="dropdown-item">Insérer des colonnes</div>
+                        <div class="dropdown-item">Insérer une feuille</div>
+                    </div>
+                </div>
+                <div class="tool dropdown">
+                    <div class="label">Supprimer</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Supprimer des cellules</div>
+                        <div class="dropdown-item">Supprimer des lignes</div>
+                        <div class="dropdown-item">Supprimer des colonnes</div>
+                        <div class="dropdown-item">Supprimer la feuille</div>
+                    </div>
+                </div>
+                <div class="tool">
+                    <div class="label">Format</div>
+                </div>
+            </div> -->
+
+            <!-- Group 6: Styles -->
+            <!-- <div class="tool-group">
+                <div class="group-title">Styles</div>
+                <div class="tool dropdown">
+                    <div class="label">Mise en forme conditionnelle</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Règles de mise en surbrillance</div>
+                        <div class="dropdown-item">Règles des premières/dernières</div>
+                        <div class="dropdown-item">Barres de données</div>
+                        <div class="dropdown-item">Nuances de couleurs</div>
+                        <div class="dropdown-item">Jeux d'icônes</div>
+                    </div>
+                </div>
+                <div class="tool dropdown">
+                    <div class="label">Format de tableau</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Tableau simple</div>
+                        <div class="dropdown-item">Tableau avec en-têtes</div>
+                        <div class="dropdown-item">Tableau filtré</div>
+                    </div>
+                </div>
+                <div class="tool dropdown">
+                    <div class="label">Styles de cellules</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Normal</div>
+                        <div class="dropdown-item">Titre</div>
+                        <div class="dropdown-item">Accentuation</div>
+                        <div class="dropdown-item">Note</div>
+                        <div class="dropdown-item">Avertissement</div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Group 7: Edition -->
+            <!-- <div class="tool-group">
+                <div class="group-title">Edition</div>
+                <div class="tool">
+                    <button class="icon" title="" type="button">🔍</button>
+                    <div class="label">Rechercher</div>
+                </div>
+                <div class="tool dropdown">
+                    <div class="label">Trier & Filtrer</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Trier de A à Z</div>
+                        <div class="dropdown-item">Trier de Z à A</div>
+                        <div class="dropdown-item">Tri personnalisé</div>
+                        <div class="separator"></div>
+                        <div class="dropdown-item">Filtrer</div>
+                        <div class="dropdown-item">Effacer le filtre</div>
+                    </div>
+                </div>
+                <div class="tool">
+                    <button class="icon" title="" type="button">↻</button>
+                    <div class="label">Recalculer</div>
+                </div>
+            </div> -->
+
+            <!-- Group 8: Compléments -->
+            <!-- <div class="tool-group">
+                <div class="group-title">Compléments</div>
+                <div class="tool dropdown">
+                    <div class="label">Compléments</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Gérer les compléments</div>
+                        <div class="dropdown-item">Obtenir des compléments</div>
+                    </div>
+                </div>
+                <div class="tool dropdown">
+                    <div class="label">Macro</div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Enregistrer une macro</div>
+                        <div class="dropdown-item">Utiliser des macros</div>
+                        <div class="dropdown-item">Sécurité des macros</div>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+
 
         <div class="sheet-tabs" id="sheetTabs">
         </div>
@@ -226,30 +711,326 @@
 
 
     <script>
+
+        const rowSize = 200;
+        const colSize = 100;
         let securityFolder;
         let currentFile;
         let currentKeyFile;
         let currentKey;
         let activeSheet = 0;
         let sheets = [];
+        function toggleBold() {
+            if (selectedCells.length === 0) return;
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                sheet.toggleStyle(row, col, 'bold');
+                updateCellDisplay(row, col);
+            });
+
+        }
+
+        function toggleItalic() {
+            if (selectedCells.length === 0) return;
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                sheet.toggleStyle(row, col, 'italic');
+                updateCellDisplay(row, col);
+            });
+        }
+
+        function toggleUpper() {
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+                // Update the cell's display
+                const value = sheet.getCell(row, col);
+                let uppercaseValue = value.toUpperCase();
+                if(!sheets[activeSheet].isHidden(row, col)){
+                    cell.textContent = uppercaseValue == value ? value.toLowerCase() : uppercaseValue;
+                    sheets[activeSheet].setCell(row, col,  uppercaseValue == value ? value.toLowerCase() : uppercaseValue);
+                }
+            });
+        }
+
+
+        function toggleUnderline() {
+            if (selectedCells.length === 0) return;
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                sheet.toggleStyle(row, col, 'underline');
+                updateCellDisplay(row, col);
+            });
+        }
+
+        function setTextColor(color) {
+            if (selectedCells.length === 0) return;
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                sheet.setStyle(row, col, 'color', color);
+                updateCellDisplay(row, col);
+            });
+        }
+
+        function setBackgroundColor() {
+            if (selectedCells.length === 0) return;
+
+            const color = prompt("Enter background color (e.g., 'yellow' or '#ffff00'):");
+            if (!color) return;
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                const key = `${row},${col}`;
+                const currentCellStyles = sheet.cellStyles.get(key) || {};
+                currentCellStyles.backgroundColor = color;
+                sheet.cellStyles.set(key, currentCellStyles);
+
+                updateCellDisplay(row, col);
+            });
+        }
+
+        function setFontSize() {
+            if (selectedCells.length === 0) return;
+            let size = document.getElementById('fontSizeInput').value;
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                sheet.setStyle(row, col, 'fontSize', size);
+                updateCellDisplay(row, col);
+            });
+        }
+
+        function setTextAlign(align) {
+            if (selectedCells.length === 0) return;
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                sheet.setStyle(row, col, 'textAlign', align);
+                updateCellDisplay(row, col);
+            });
+        }
+
+        function setFontFamily(font) {
+            if (!font)
+                font = prompt("Enter font family (e.g., 'Arial', 'Verdana'):");
+            if (!font) return;
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                sheet.setStyle(row, col, 'fontFamily', font);
+                updateCellDisplay(row, col);
+            });
+        }
+
+        function setNumberFormat(format) {
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                // Apply the format to the cell
+                sheet.setStyle(row, col, 'numberFormat', format);
+
+                // Update the cell's display
+                const value = sheet.getCell(row, col);
+                cell.textContent = formatNumber(value, format);
+                if(!sheets[activeSheet].isHidden(row, col))
+                    sheets[activeSheet].setCell(row, col, formatNumber(value, format));
+            });
+        }
+
+        function formatNumber(value, format) {
+            if (isNaN(value)) return value; // If not a number, return as-is
+
+            switch (format) {
+                case 'general':
+                    return value; // No special formatting
+                case 'number':
+                    return parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                case 'currency':
+                    return parseFloat(value).toLocaleString(undefined, { style: 'currency', currency: 'USD' }); // Default currency
+                case 'percentage':
+                    return (parseFloat(value) * 100).toFixed(2) + '%';
+                case 'date':
+                    return new Date(value).toLocaleDateString();
+                case 'time':
+                    return new Date(value).toLocaleTimeString();
+                default:
+                    return value; // Unsupported format
+            }
+        }
+
+        function toggleHiddenCell() {
+            if (selectedCells.length === 0) return; // Nothing to toggle if no selection
+
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const sheet = sheets[activeSheet];
+
+                // Toggle the hidden state
+                sheet.toggleHidden(row, col);
+
+                // Update the cell content
+                if (sheet.isHidden(row, col)) {
+                    sheets[activeSheet].setCell(row, col, cell.textContent); // Update the sheet
+                    cell.textContent = '***'; // Replace content with *
+                    cell.classList.add('hidden-content');
+                } else {
+                    cell.textContent = sheet.getCell(row, col); // Restore original content
+                    cell.classList.remove('hidden-content');
+                }
+                saveFile();
+            });
+        }
+
+        function updateCellDisplay(row, col) {
+            const act = sheets[activeSheet];
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            const { textStyles, cellStyles } = act.getStyles(row, col);
+
+            // Text styles
+            if (textStyles) {
+                cell.style.fontWeight = textStyles.bold ? "bold" : "normal";
+                cell.style.fontStyle = textStyles.italic ? "italic" : "normal";
+                cell.style.textDecoration = textStyles.underline ? "underline" : "none";
+                cell.style.color = textStyles.color || "inherit";
+                cell.style.fontSize = textStyles.fontSize + "px" || "inherit";
+                cell.style.width = textStyles.width + "px" || "inherit";
+                cell.style.fontFamily = textStyles.fontFamily || "Arial";
+                cell.style.textAlign = textStyles.textAlign || "left";
+            }
+
+            // Cell styles
+            if (cellStyles) {
+                cell.style.backgroundColor = cellStyles.backgroundColor || "transparent";
+            }
+
+            // Hidden cells
+            if (act.hiddenCells.has(`${row},${col}`)) {
+                cell.textContent = '***';
+                cell.classList.add('hidden-content');
+            } else {
+                cell.textContent = act.getCell(row, col) || '';
+                cell.classList.remove('hidden-content');
+            }
+            saveFile();
+        }
+
+
+
+
+
+
+
+
+
+
+
 
         class Sheet {
             constructor(name) {
                 this.name = name;
                 this.cells = new Map();
-                this.hiddenCells = new Set();
+                this.richTextStyles = new Map(); // Store text styles (bold, italic, etc.)
+                this.cellStyles = new Map(); // Store cell-specific styles like background color
+                this.hiddenCells = new Set(); // Track hidden cells
             }
 
-            setCell(row, col, value) {
+            // Set cell content and optional styles
+            setCell(row, col, value, textStyles = null, cellStyles = null) {
                 const key = `${row},${col}`;
                 this.cells.set(key, value);
+
+                if (textStyles) {
+                    this.richTextStyles.set(key, textStyles);
+                } else {
+                    this.richTextStyles.delete(key);
+                }
+
+                if (cellStyles) {
+                    this.cellStyles.set(key, cellStyles);
+                } else {
+                    this.cellStyles.delete(key);
+                }
             }
+
+            toggleStyle(row, col, styleKey) {
+                const key = `${row},${col}`;
+                const currentStyles = this.richTextStyles.get(key) || {};
+                currentStyles[styleKey] = !currentStyles[styleKey];
+                this.richTextStyles.set(key, currentStyles);
+            }
+
+            setStyle(row, col, styleKey, value) {
+                const key = `${row},${col}`;
+                const currentStyles = this.richTextStyles.get(key) || {};
+                currentStyles[styleKey] = value;
+                this.richTextStyles.set(key, currentStyles);
+            }
+
+            getStyle(row, col, styleKey) {
+                const key = `${row},${col}`;
+                const styles = this.richTextStyles.get(key) || {};
+                return styles[styleKey] || null;
+            }
+
+            // Get all styles for a cell
+            getStyles(row, col) {
+                const key = `${row},${col}`;
+                return {
+                    textStyles: this.richTextStyles.get(key) || {},
+                    cellStyles: this.cellStyles.get(key) || {}
+                };
+            }
+
+            getRichTextStyles(row, col) {
+                const key = `${row},${col}`;
+                return this.richTextStyles.get(key) || null;
+            }
+
+            isRichText(row, col) {
+                const key = `${row},${col}`;
+                return this.richTextStyles.has(key);
+            }
+
 
             removeCell(row, col) {
                 const key = `${row},${col}`;
                 this.cells.delete(key);
                 if (this.hiddenCells.has(key)) {
                     this.hiddenCells.delete(key);
+                }
+                if (this.richTextStyles.has(key)) {
+                    this.richTextStyles.delete(key);
                 }
             }
 
@@ -389,7 +1170,7 @@
                 currentFile = fileHandle;
 
                 if (document.getElementById("masterPassword").value != "") {
-                    
+
                     let newk = Array.from(document.getElementById("masterPassword").value)
                         .map(b => b.toString(16).padStart(2, '0'))
                         .join('')
@@ -411,13 +1192,10 @@
             try {
                 let fileHandle;
                 if (!currentFile) {
-                    // Save the encrypted file
                     fileHandle = await window.showSaveFilePicker({
                         types: [{
                             description: 'Secure Files',
-                            accept: {
-                                'application/securefile': ['.securefile']
-                            }
+                            accept: { 'application/securefile': ['.securefile'] }
                         }]
                     });
                     currentFile = fileHandle;
@@ -425,50 +1203,12 @@
                     fileHandle = currentFile;
                 }
 
-                // Get the base name without extension
-                const baseName = fileHandle.name.replace('.securefile', '');
-                let keyHandle;
-                if (!currentKeyFile) {
-                    // Save the key file
-                    keyHandle = await window.showSaveFilePicker({
-                        types: [{
-                            description: 'Secure Key Files',
-                            accept: {
-                                'application/securekey': ['.securekey']
-                            }
-                        }],
-                        suggestedName: `${baseName}.securekey`
-                    });
-                    currentKeyFile = keyHandle;
-                } else {
-                    keyHandle = currentKeyFile;
-                }
-
-
                 if (!currentKey) {
-                    // Generate new encryption key
                     const key = new Uint8Array(32);
                     crypto.getRandomValues(key);
-
-                    // Convert to hex string for storage
-                    currentKey = Array.from(key)
-                        .map(b => b.toString(16).padStart(2, '0'))
-                        .join('');
+                    currentKey = Array.from(key).map(b => b.toString(16).padStart(2, '0')).join('');
                 }
-                    // Write the key file
-                    const keyWritable = await keyHandle.createWritable();
-                if (document.getElementById("masterPassword").value != "") {
 
-                    let newk = Array.from(document.getElementById("masterPassword").value)
-                        .map(b => b.toString(16).padStart(2, '0'))
-                        .join('')
-                    await keyWritable.write(encryptContent(currentKey, newk));
-                } else {
-                    await keyWritable.write(currentKey);
-                }
-                await keyWritable.close();
-
-                // Prepare content
                 let content = '';
                 sheets.forEach(sheet => {
                     content += `_filename_sheet_${sheet.name}\n`;
@@ -478,27 +1218,38 @@
                             sheet.removeCell(row, col);
                             return;
                         }
-                        if (sheet.isHidden(row, col))
-                            content += `pwd(${value})!,!${col}!,!${row}\n`;
-                        else
+
+                        let cellContent = value;
+                        if (sheet.isRichText(row, col) || sheet.cellStyles.get(key)) {
+                            const styles = {
+                                text: value,
+                                textStyles: sheet.getRichTextStyles(row, col),
+                                cellStyles: sheet.cellStyles.get(key)
+                            };
+                            content += `${JSON.stringify(styles)}!,!${col}!,!${row}\n`;
+                        } else {
                             content += `${value}!,!${col}!,!${row}\n`;
+                        }
+
+
+                        if (sheet.isHidden(row, col)) {
+                            content += `pwd(${cellContent})!,!${col}!,!${row}\n`;
+                        } else {
+                            content += `${cellContent}!,!${col}!,!${row}\n`;
+                        }
                     });
                 });
 
-                // Encrypt content
                 const encryptedContent = encryptContent(content, currentKey);
 
-
-
-                // Write the encrypted file
                 const fileWritable = await fileHandle.createWritable();
                 await fileWritable.write(encryptedContent);
                 await fileWritable.close();
-
             } catch (error) {
                 console.error('Error saving file:', error);
             }
         }
+
 
         // Encryption functions
         function encryptContent(content, keyHex) {
@@ -576,7 +1327,22 @@
                     sheets.push(currentSheet);
                 } else if (line.trim() && currentSheet) {
                     const [value, col, row] = line.split('!,!');
-                    if (value.startsWith('pwd(') && value.endsWith(')')) {
+                    let cellContent = value;
+
+                    // Check for rich text
+                    if (value.startsWith('{') && value.endsWith('}')) {
+                        try {
+                            const parsedStyles = JSON.parse(value);
+                            currentSheet.setCell(parseInt(row), parseInt(col), parsedStyles.text, parsedStyles.textStyles, parsedStyles.cellStyles);
+                        } catch (e) {
+                            console.error("Failed to parse cell styles:", e);
+                        }
+                    }
+
+
+                    if (typeof cellContent === "object" && cellContent.text) {
+                        currentSheet.setCell(parseInt(row), parseInt(col), cellContent.text, cellContent);
+                    } else if (value.startsWith('pwd(') && value.endsWith(')')) {
                         currentSheet.setCell(parseInt(row), parseInt(col), value.slice(4, -1));
                         currentSheet.toggleHidden(parseInt(row), parseInt(col));
                     } else {
@@ -589,6 +1355,7 @@
                 sheets.push(new Sheet('Sheet1'));
             }
         }
+
 
         function initializeEditor() {
             sheets = [new Sheet('Sheet1')];
@@ -637,7 +1404,7 @@
             }
 
             // Add rows
-            for (let row = 0; row < 200; row++) {
+            for (let row = 0; row < rowSize; row++) {
                 // Add row header
                 const rowHeader = document.createElement('div');
                 rowHeader.className = 'cell row-header';
@@ -645,7 +1412,7 @@
                 grid.appendChild(rowHeader);
 
                 // Add cells
-                for (let col = 0; col < 100; col++) {
+                for (let col = 0; col < colSize; col++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
                     cell.contentEditable = true;
@@ -688,6 +1455,7 @@
             isSelecting = true;
 
             // Add the current cell to selection
+            document.getElementById("fontSizeInput").value = cell.style.fontSize;
             addToSelection(cell);
         }
 
@@ -742,9 +1510,19 @@
                     cell.textContent = "***";
                     return;
                 }
-                sheets[activeSheet].setCell(row, col, cell.textContent);
+                if (isCtrlPressed && (event.key === "i" || event.key === "I")) {
+                    toggleItalic();
+                }
+                else if (isCtrlPressed && (event.key === "b" || event.key === "B")) {
+                    toggleBold();
+                }
+                else if (isCtrlPressed && (event.key === "u" || event.key === "U")) {
+                    toggleUnderline();
+                } else {
+                    sheets[activeSheet].setCell(row, col, cell.textContent);
+                    saveFile(); // Auto-save after editing a cell
+                }
             }
-            saveFile(); // Auto-save after editing a cell
         }
 
         function addNewSheet() {
@@ -776,35 +1554,6 @@
                 saveFile(); // Auto-save after removing a sheet
             }
         }
-
-        function toggleHiddenCell() {
-            if (selectedCells.length === 0) return; // Nothing to toggle if no selection
-
-            selectedCells.forEach(cell => {
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
-                const sheet = sheets[activeSheet];
-
-                // Toggle the hidden state
-                sheet.toggleHidden(row, col);
-
-                // Update the cell content
-                if (sheet.isHidden(row, col)) {
-                    sheets[activeSheet].setCell(row, col, cell.textContent); // Update the sheet
-                    cell.textContent = '***'; // Replace content with *
-                    cell.classList.add('hidden-content');
-                } else {
-                    cell.textContent = sheet.getCell(row, col); // Restore original content
-                    cell.classList.remove('hidden-content');
-                }
-                saveFile();
-            });
-
-            // Clear the selection after toggling
-            selectedCells.forEach(cell => cell.classList.remove('selected'));
-            selectedCells = [];
-        }
-
 
         document.addEventListener('paste', (event) => {
             handlePaste(event);

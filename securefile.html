@@ -426,28 +426,6 @@
             cursor: pointer;
         }
     </style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </head>
 
 <body>
@@ -494,6 +472,10 @@
         <div class="tool-panel">
             <!-- Group 1: Presse-papiers -->
             <div class="tool-group">
+                <div class="group-title">spécial</div>
+                <div class="tool dropdown">
+                    <button title="" type="button" onclick="toggleHiddenCell()">Cacher contenu</button>
+                </div>
                 <div class="group-title">Presse-papiers</div>
                 <div class="tool dropdown">
                     <button class="icon" title="" type="button">📋</button>
@@ -542,8 +524,7 @@
                         onclick="document.getElementById('fontSizeInput').value= parseFloat(document.getElementById('fontSizeInput').value == '' ? 11 : document.getElementById('fontSizeInput').value) + 1; setFontSize()">A+</button>
                     <button class="icon" title="" type="button"
                         onclick="document.getElementById('fontSizeInput').value= parseFloat(document.getElementById('fontSizeInput').value == '' ? 11 : document.getElementById('fontSizeInput').value) - 1; setFontSize()">A-</button>
-                    <button class="icon" title="" type="button"
-                    onclick="toggleUpper()">Aa</button>
+                    <button class="icon" title="" type="button" onclick="toggleUpper()">Aa</button>
                 </div>
                 <div class="tool">
                     <div class="color-picker">
@@ -596,7 +577,7 @@
                     </select>
                 </div>
             </div>
- 
+
             <!-- Group 5: Cellules -->
             <!-- <div class="tool-group">
                 <div class="group-title">Cellules</div>
@@ -755,9 +736,9 @@
                 // Update the cell's display
                 const value = sheet.getCell(row, col);
                 let uppercaseValue = value.toUpperCase();
-                if(!sheets[activeSheet].isHidden(row, col)){
+                if (!sheets[activeSheet].isHidden(row, col)) {
                     cell.textContent = uppercaseValue == value ? value.toLowerCase() : uppercaseValue;
-                    sheets[activeSheet].setCell(row, col,  uppercaseValue == value ? value.toLowerCase() : uppercaseValue);
+                    sheets[activeSheet].setCell(row, col, uppercaseValue == value ? value.toLowerCase() : uppercaseValue);
                 }
             });
         }
@@ -862,7 +843,7 @@
                 // Update the cell's display
                 const value = sheet.getCell(row, col);
                 cell.textContent = formatNumber(value, format);
-                if(!sheets[activeSheet].isHidden(row, col))
+                if (!sheets[activeSheet].isHidden(row, col))
                     sheets[activeSheet].setCell(row, col, formatNumber(value, format));
             });
         }
@@ -1444,37 +1425,65 @@
             container.appendChild(grid);
         }
 
+
+
         let isSelecting = false;
+let selectionStart = null;
 
-        function startSelection(event, cell) {
+function startSelection(event, cell) {
+    selectedCells.forEach(cell => cell.classList.remove('selected'));
+    selectedCells = [];
+    
+    isSelecting = true;
+    selectionStart = cell;
+    
+    document.getElementById("fontSizeInput").value = cell.style.fontSize;
+    addToSelection(cell);
+}
 
-            // Unselect all cells if the click is outside cells
-            selectedCells.forEach(cell => cell.classList.remove('selected'));
-            selectedCells = [];
-
-            isSelecting = true;
-
-            // Add the current cell to selection
-            document.getElementById("fontSizeInput").value = cell.style.fontSize;
-            addToSelection(cell);
-        }
-
-        function continueSelection(event, cell) {
-            if (!isSelecting) return;
-
-            addToSelection(cell);
-        }
-
-        function endSelection() {
-            isSelecting = false;
-        }
-
-        function addToSelection(cell) {
-            if (!cell.classList.contains('selected')) {
-                cell.classList.add('selected');
-                selectedCells.push(cell);
+function continueSelection(event, cell) {
+    if (!isSelecting) return;
+    
+    // Clear previous selection
+    selectedCells.forEach(cell => cell.classList.remove('selected'));
+    selectedCells = [];
+    
+    // Get start and end coordinates
+    const startRow = parseInt(selectionStart.dataset.row);
+    const startCol = parseInt(selectionStart.dataset.col);
+    const endRow = parseInt(cell.dataset.row);
+    const endCol = parseInt(cell.dataset.col);
+    
+    // Calculate selection rectangle
+    const minRow = Math.min(startRow, endRow);
+    const maxRow = Math.max(startRow, endRow);
+    const minCol = Math.min(startCol, endCol);
+    const maxCol = Math.max(startCol, endCol);
+    
+    // Select all cells in the rectangle
+    for (let row = minRow; row <= maxRow; row++) {
+        for (let col = minCol; col <= maxCol; col++) {
+            const currentCell = document.querySelector(
+                `.cell[data-row="${row}"][data-col="${col}"]`
+            );
+            if (currentCell) {
+                addToSelection(currentCell);
             }
         }
+    }
+}
+
+function endSelection() {
+    isSelecting = false;
+    selectionStart = null;
+}
+
+function addToSelection(cell) {
+    if (!cell.classList.contains('selected')) {
+        cell.classList.add('selected');
+        selectedCells.push(cell);
+    }
+}
 
 
 
